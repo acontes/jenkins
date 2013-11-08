@@ -209,7 +209,7 @@ public class Queue extends ResourceController implements Saveable {
             long t = System.currentTimeMillis();
             long d = expires.get();
             if (t>d) {// need to refresh the cache
-                long next = t+1000;
+                long next = t+Integer.parseInt(System.getProperty(getClass().getName() + ".refreshCacheRate", "10000"));
                 if (expires.compareAndSet(d,next)) {
                     // avoid concurrent cache update via CAS.
                     // if the getItems() lock is contended,
