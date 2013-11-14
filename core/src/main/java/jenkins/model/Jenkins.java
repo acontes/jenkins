@@ -65,6 +65,7 @@ import hudson.model.LoadBalancer;
 import hudson.model.ManagementLink;
 import hudson.model.NoFingerprintMatch;
 import hudson.model.OverallLoadStatistics;
+import hudson.model.PaneStatusProperties;
 import hudson.model.Project;
 import hudson.model.Queue.BuildableItem;
 import hudson.model.Queue.FlyweightTask;
@@ -2860,6 +2861,15 @@ public class Jenkins extends AbstractCIBase implements ModifiableTopLevelItemGro
         isQuietingDown = false;
         getQueue().scheduleMaintenance();
         return new HttpRedirect(".");
+    }
+
+    public HttpResponse doToggleCollapse() throws ServletException, IOException {
+    	final StaplerRequest request = Stapler.getCurrentRequest();
+    	final String paneId = request.getParameter("paneId");
+    	
+    	PaneStatusProperties.forCurrentUser().toggleCollapsed(paneId);
+    	
+        return HttpResponses.forwardToPreviousPage();
     }
 
     /**
