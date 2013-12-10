@@ -1,6 +1,7 @@
 package jenkins.model;
 
 import com.google.common.base.Predicate;
+
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Job;
@@ -10,10 +11,12 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.util.AtomicFileWriter;
 import hudson.util.StreamTaskListener;
+
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -168,24 +171,28 @@ public abstract class PeepholePermalink extends Permalink implements Predicate<R
         StringWriter w = new StringWriter();
         StreamTaskListener listener = new StreamTaskListener(w);
         File tmp = new File(cache.getPath()+".tmp");
-        try {
-            Util.createSymlink(tmp.getParentFile(),target,tmp.getName(),listener);
-            // Avoid calling resolveSymlink on a nonexistent file as it will probably throw an IOException:
-            if (!exists(tmp) || Util.resolveSymlink(tmp)==null) {
-                // symlink not supported. use a regular file
-                AtomicFileWriter cw = new AtomicFileWriter(cache);
-                try {
-                    cw.write(target);
-                    cw.commit();
-                } finally {
-                    cw.abort();
-                }
-            } else {
-                cache.delete();
-                tmp.renameTo(cache);
-            }
-        } finally {
-            tmp.delete();
+        if (Boolean.getBoolean(PeepholePermalink.class.getName()+".noTmpFile")) {
+          Util.createSymlink(cache.getParentFile(),target,cache.getName(),listener);
+        } else {
+          try {
+              Util.createSymlink(tmp.getParentFile(),target,tmp.getName(),listener);
+              // Avoid calling resolveSymlink on a nonexistent file as it will probably throw an IOException:
+              if (!exists(tmp) || Util.resolveSymlink(tmp)==null) {
+                  // symlink not supported. use a regular file
+                  AtomicFileWriter cw = new AtomicFileWriter(cache);
+                  try {
+                      cw.write(target);
+                      cw.commit();
+                  } finally {
+                      cw.abort();
+                  }
+              } else {
+                  cache.delete();
+                  tmp.renameTo(cache);
+              }
+          } finally {
+              tmp.delete();
+          }
         }
     }
 
