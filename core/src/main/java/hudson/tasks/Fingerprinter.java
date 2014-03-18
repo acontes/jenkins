@@ -140,7 +140,7 @@ public class Fingerprinter extends Recorder implements Serializable, DependencyD
             }
 
             if (enableFingerprintsInDependencyGraph) {
-                Jenkins.getInstance().rebuildDependencyGraphAsync();
+                Jenkins.getInstance().invalidateDependencyGraph();
             }
         } catch (IOException e) {
             e.printStackTrace(listener.error(Messages.Fingerprinter_Failed()));

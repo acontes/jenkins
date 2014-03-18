@@ -283,8 +283,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -734,6 +736,8 @@ public class Jenkins extends AbstractCIBase implements DirectlyModifiableTopLeve
      */
     private transient final LogRecorderManager log = new LogRecorderManager();
 
+    private volatile boolean invalidDependencyGraph = false;
+
     protected Jenkins(File root, ServletContext context) throws IOException, InterruptedException, ReactorException {
         this(root,context,null);
     }
@@ -767,6 +771,17 @@ public class Jenkins extends AbstractCIBase implements DirectlyModifiableTopLeve
             // doing this early allows InitStrategy to set environment upfront
             final InitStrategy is = InitStrategy.get(Thread.currentThread().getContextClassLoader());
 
+            Timer.get().scheduleWithFixedDelay(new SafeTimerTask() {
+              @Override
+              protected void doRun() throws Exception {
+                if ( invalidDependencyGraph ) {
+                  rebuildDependencyGraph();
+                  invalidDependencyGraph = false;
+                }
+              }
+             }, TimeUnit2.MINUTES.toMillis(2), TimeUnit2.SECONDS.toMillis(10), TimeUnit.MILLISECONDS);
+
+            
             Trigger.timer = new java.util.Timer("Jenkins cron thread");
             queue = new Queue(LoadBalancer.CONSISTENT_HASH);
 
@@ -3641,6 +3656,10 @@ public class Jenkins extends AbstractCIBase implements DirectlyModifiableTopLeve
         // that graph is fully build, before it's visible to other threads
         dependencyGraph = graph;
         dependencyGraphDirty.set(false);
+    }
+
+    public void invalidateDependencyGraph() {
+        invalidDependencyGraph = true;
     }
 
     /**
