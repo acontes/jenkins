@@ -291,8 +291,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -734,6 +736,8 @@ public class Jenkins extends AbstractCIBase implements ModifiableTopLevelItemGro
      */
     private transient final LogRecorderManager log = new LogRecorderManager();
 
+    private volatile boolean invalidDependencyGraph = false;
+
     protected Jenkins(File root, ServletContext context) throws IOException, InterruptedException, ReactorException {
         this(root,context,null);
     }
@@ -767,6 +771,17 @@ public class Jenkins extends AbstractCIBase implements ModifiableTopLevelItemGro
             // doing this early allows InitStrategy to set environment upfront
             final InitStrategy is = InitStrategy.get(Thread.currentThread().getContextClassLoader());
 
+            Timer.get().scheduleWithFixedDelay(new SafeTimerTask() {
+              @Override
+              protected void doRun() throws Exception {
+                if ( invalidDependencyGraph ) {
+                  rebuildDependencyGraph();
+                  invalidDependencyGraph = false;
+                }
+              }
+             }, TimeUnit2.MINUTES.toMillis(2), TimeUnit2.SECONDS.toMillis(10), TimeUnit.MILLISECONDS);
+
+            
             Trigger.timer = new java.util.Timer("Jenkins cron thread");
             queue = new Queue(LoadBalancer.CONSISTENT_HASH);
 
@@ -3596,6 +3611,10 @@ public class Jenkins extends AbstractCIBase implements ModifiableTopLevelItemGro
         // volatile acts a as a memory barrier here and therefore guarantees 
         // that graph is fully build, before it's visible to other threads
         dependencyGraph = graph;
+    }
+
+    public void invalidateDependencyGraph() {
+        invalidDependencyGraph = true;
     }
 
     /**
