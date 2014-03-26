@@ -212,8 +212,8 @@ public abstract class ItemGroupMixIn {
 
         add(result);
         ItemListener.fireOnCopied(src,result);
-        Jenkins.getInstance().rebuildDependencyGraphAsync();
-
+        Jenkins.getInstance().invalidateDependencyGraph();
+        
         return result;
     }
 
@@ -238,7 +238,7 @@ public abstract class ItemGroupMixIn {
             add(result);
 
             ItemListener.fireOnCreated(result);
-            Jenkins.getInstance().rebuildDependencyGraphAsync();
+            Jenkins.getInstance().invalidateDependencyGraph();
 
             return result;
         } catch (IOException e) {
@@ -269,7 +269,7 @@ public abstract class ItemGroupMixIn {
         }
         item.save();
         add(item);
-        Jenkins.getInstance().rebuildDependencyGraphAsync();
+        Jenkins.getInstance().invalidateDependencyGraph();
 
         if (notify)
             ItemListener.fireOnCreated(item);

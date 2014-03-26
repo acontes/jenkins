@@ -514,7 +514,7 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
             // ignore
         }
 
-        Jenkins.getInstance().rebuildDependencyGraphAsync();
+        Jenkins.getInstance().invalidateDependencyGraph();
     }
 
     /**
@@ -593,7 +593,7 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
             } finally {
                 Items.updatingByXml.set(false);
             }
-            Jenkins.getInstance().rebuildDependencyGraphAsync();
+            Jenkins.getInstance().invalidateDependencyGraph();
 
             // if everything went well, commit this new version
             out.commit();

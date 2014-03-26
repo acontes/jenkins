@@ -799,7 +799,8 @@ public abstract class AbstractProject<P extends AbstractProject<P,R>,R extends A
         Jenkins.getInstance().getQueue().scheduleMaintenance();
 
         // this is to reflect the upstream build adjustments done above
-        Jenkins.getInstance().rebuildDependencyGraphAsync();
+        Jenkins.getInstance().invalidateDependencyGraph();
+
     }
 
     /**
