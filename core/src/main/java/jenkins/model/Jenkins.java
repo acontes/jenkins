@@ -775,7 +775,7 @@ public class Jenkins extends AbstractCIBase implements DirectlyModifiableTopLeve
               @Override
               protected void doRun() throws Exception {
                 if ( invalidDependencyGraph ) {
-                  rebuildDependencyGraph();
+                  internalRebuildDependencyGraph();
                   invalidDependencyGraph = false;
                 }
               }
@@ -3650,6 +3650,10 @@ public class Jenkins extends AbstractCIBase implements DirectlyModifiableTopLeve
      * Rebuilds the dependency map.
      */
     public void rebuildDependencyGraph() {
+      invalidateDependencyGraph();
+    }
+    
+    protected void internalRebuildDependencyGraph() {
         DependencyGraph graph = new DependencyGraph();
         graph.build();
         // volatile acts a as a memory barrier here and therefore guarantees 

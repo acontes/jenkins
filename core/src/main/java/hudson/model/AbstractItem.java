@@ -531,7 +531,7 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
             performDelete();
         } // JENKINS-19446: leave synch block, but JENKINS-22001: still notify synchronously
         invokeOnDeleted();
-        Jenkins.getInstance().rebuildDependencyGraphAsync();
+        Jenkins.getInstance().invalidateDependencyGraph();
     }
 
     /**
@@ -611,7 +611,7 @@ public abstract class AbstractItem extends Actionable implements Item, HttpDelet
                     return null;
                 }
             });
-            Jenkins.getInstance().rebuildDependencyGraphAsync();
+            Jenkins.getInstance().invalidateDependencyGraph();
 
             // if everything went well, commit this new version
             out.commit();
